@@ -1,0 +1,181 @@
+{
+  "name": "Phone Number Validation Workflow",
+  "description": "Processes incoming webhook data, validates phone numbers (Spanish or foreign), and executes appropriate actions.",
+  "version": 1,
+  "modules": [
+    {
+      "id": 1,
+      "name": "Webhook",
+      "module": "webhook",
+      "version": 1,
+      "parameters": {
+        "connection": null,
+        "webhook": {
+          "type": "custom",
+          "name": "Incoming Phone Data"
+        }
+      },
+      "interface": [
+        {
+          "name": "full_name",
+          "type": "text"
+        },
+        {
+          "name": "phone_number",
+          "type": "text"
+        },
+        {
+          "name": "address1",
+          "type": "text"
+        },
+        {
+          "name": "postcode",
+          "type": "text"
+        },
+        {
+          "name": "email",
+          "type": "text"
+        },
+        {
+          "name": "city",
+          "type": "text"
+        },
+        {
+          "name": "infos",
+          "type": "collection",
+          "spec": [
+            {
+              "name": "nutzflaeche",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Set Variable - Clean Phone Number",
+      "module": "util:setVariables",
+      "version": 1,
+      "parameters": {
+        "variables": [
+          {
+            "name": "cleaned_phone",
+            "value": "{{replace(replace(replace(1.phone_number; \"tel: \"; \"\"); \" \"; \"\"); \"-\"; \"\")}}"
+          }
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "name": "Router",
+      "module": "router",
+      "version": 1,
+      "parameters": {},
+      "routes": [
+        {
+          "id": 4,
+          "name": "Spanish Number Path",
+          "filter": {
+            "type": "and",
+            "conditions": [
+              {
+                "type": "or",
+                "conditions": [
+                  {
+                    "type": "text",
+                    "operator": "startsWith",
+                    "value": "{{2.cleaned_phone}}",
+                    "compare": "+34"
+                  },
+                  {
+                    "type": "text",
+                    "operator": "startsWith",
+                    "value": "{{2.cleaned_phone}}",
+                    "compare": "0034"
+                  },
+                  {
+                    "type": "text",
+                    "operator": "startsWith",
+                    "value": "{{2.cleaned_phone}}",
+                    "compare": "34"
+                  },
+                  {
+                    "type": "text",
+                    "operator": "startsWith",
+                    "value": "{{2.cleaned_phone}}",
+                    "compare": "6"
+                  },
+                  {
+                    "type": "text",
+                    "operator": "startsWith",
+                    "value": "{{2.cleaned_phone}}",
+                    "compare": "7"
+                  }
+                ]
+              }
+            ]
+          },
+          "target": 5
+        },
+        {
+          "id": 6,
+          "name": "Foreign Number Path",
+          "filter": {
+            "type": "and",
+            "conditions": [
+              {
+                "type": "boolean",
+                "operator": "not",
+                "value": "{{empty(2.cleaned_phone)}}"
+              }
+            ]
+          },
+          "target": 7
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "name": "HTTP - Make a request (Spanish Number)",
+      "module": "http:request",
+      "version": 1,
+      "parameters": {
+        "url": "https://hook.eu2.make.com/ok6kkis1cr826nwieyad2ikgmt6jruoe",
+        "method": "POST",
+        "headers": [
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": "{\n  \"full_name\": \"{{1.full_name}}\",\n  \"phone_number\": \"{{2.cleaned_phone}}\",\n  \"address1\": \"{{1.address1}}\",\n  \"postcode\": \"{{1.postcode}}\",\n  \"email\": \"{{1.email}}\",\n  \"city\": \"{{1.city}}\",\n  \"nutzflaeche\": \"{{1.infos.nutzflaeche}}\"\n}",
+        "parseResponse": true,
+        "followRedirect": true,
+        "timeout": 300,
+        "retry": {
+          "max": 3,
+          "interval": 5000
+        }
+      }
+    },
+    {
+      "id": 7,
+      "name": "Email - Send an email (Foreign Number)",
+      "module": "email:send",
+      "version": 1,
+      "parameters": {
+        "connection": null,
+        "to": "l.lemos@eltex.es",
+        "subject": "New Foreign Number Alert - {{formatDate(now; \"YYYY-MM-DD\")}}",
+        "html": false,
+        "text": "Contact Details:\nFull Name: {{1.full_name}}\nPhone Number: {{2.cleaned_phone}}\nEmail: {{1.email}}\nAddress: {{1.address1}}, {{1.city}}, {{1.postcode}}\nNutzflaeche: {{1.infos.nutzflaeche}}\nTimestamp: {{formatDate(now; \"YYYY-MM-DD HH:mm:ss\")}}"
+      }
+    }
+  ],
+  "connections": {},
+  "scenario": {
+    "autoCommit": true,
+    "maxErrors": 3
+  }
+}
