@@ -386,18 +386,7 @@ export default function WebhookForm() {
                   </div>
                 </div>
 
-                <div className="bg-gradient-to-r from-indigo-600 to-blue-600 rounded-2xl p-6 mb-6 shadow-lg">
-                  <div className="flex items-center text-white mb-3">
-                    <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
-                    </svg>
-                    <span className="font-semibold">Smart Routing Logic</span>
-                  </div>
-                  <p className="text-indigo-100 text-sm leading-relaxed">
-                    Spanish numbers → HTTP request to automation platform<br/>
-                    Foreign numbers → Email alert to l.lemos@eltex.es
-                  </p>
-                </div>
+
 
                 <div className="space-y-4">
                   <label className="block text-sm font-bold text-indigo-800 mb-2">
@@ -636,7 +625,6 @@ export default function WebhookForm() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="font-bold text-indigo-900 text-xl mb-1">Make.com</div>
-                          <div className="text-sm text-indigo-600 leading-relaxed">Professional automation platform</div>
                         </div>
                         <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
                           <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -669,7 +657,6 @@ export default function WebhookForm() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="font-bold text-indigo-900 text-xl mb-1">n8n</div>
-                          <div className="text-sm text-indigo-600 leading-relaxed">Open-source workflow automation</div>
                         </div>
                         <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
                           <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -702,7 +689,6 @@ export default function WebhookForm() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="font-bold text-indigo-900 text-xl mb-1">Custom</div>
-                          <div className="text-sm text-indigo-600 leading-relaxed">Your own webhook endpoint</div>
                         </div>
                         <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
                           <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
