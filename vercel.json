@@ -4,6 +4,7 @@
   "installCommand": "npm install",
   "framework": "nextjs",
   "env": {
+    "NEXT_PUBLIC_MAKE_WEBHOOK_URL": "https://hook.eu2.make.com/l40rs4j6o8qljifrsc12pvcngq9hczjq",
     "NEXT_PUBLIC_N8N_WEBHOOK_URL": "https://primary-production-1cd8.up.railway.app/webhook/webhook-phone-automation"
   }
 }

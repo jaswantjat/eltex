@@ -116,11 +116,9 @@ export default function WebhookForm() {
       return customUrl;
     }
 
-    // Note: These are placeholder URLs. Users need to replace with their actual webhook URLs
-    // after setting up their Make.com scenario or n8n workflow
-    // In production, these would come from environment variables
+    // Production webhook URLs for ELTEX automation workflows
     const urls = {
-      make: process.env.NEXT_PUBLIC_MAKE_WEBHOOK_URL || 'https://hook.eu2.make.com/your-make-webhook-id-here',
+      make: process.env.NEXT_PUBLIC_MAKE_WEBHOOK_URL || 'https://hook.eu2.make.com/l40rs4j6o8qljifrsc12pvcngq9hczjq',
       n8n: process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL || 'https://primary-production-1cd8.up.railway.app/webhook/webhook-phone-automation',
     };
     return urls[endpoint as keyof typeof urls];
