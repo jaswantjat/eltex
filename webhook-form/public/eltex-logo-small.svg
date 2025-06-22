@@ -1,0 +1,13 @@
+<svg width="40" height="40" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="512" height="512" rx="115" fill="url(#gradient)"/>
+<!-- ELTEX Logo Symbol -->
+<path d="M120 120h200c22.091 0 40 17.909 40 40v32c0 22.091-17.909 40-40 40H200l120 120h-80L120 232V120z" fill="white"/>
+<path d="M200 232h120c22.091 0 40 17.909 40 40v80c0 22.091-17.909 40-40 40H200c-22.091 0-40-17.909-40-40v-80c0-22.091 17.909-40 40-40z" fill="white"/>
+<defs>
+<linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+<stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+<stop offset="50%" style="stop-color:#4f46e5;stop-opacity:1" />
+<stop offset="100%" style="stop-color:#3b82f6;stop-opacity:1" />
+</linearGradient>
+</defs>
+</svg>
