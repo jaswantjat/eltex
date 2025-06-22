@@ -1,9 +1,0 @@
-{
-  "name": "eltex-webhook-form",
-  "version": 2,
-  "buildCommand": "cd webhook-form && npm run build",
-  "outputDirectory": "webhook-form/.next",
-  "installCommand": "cd webhook-form && npm install",
-  "devCommand": "cd webhook-form && npm run dev",
-  "framework": "nextjs"
-}
