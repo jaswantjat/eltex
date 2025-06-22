@@ -35,7 +35,7 @@ type FormData = z.infer<typeof formSchema>;
 interface SubmissionResult {
   success: boolean;
   message: string;
-  response?: any;
+  response?: unknown;
 }
 
 export default function WebhookForm() {
@@ -825,7 +825,7 @@ export default function WebhookForm() {
               </div>
             </div>
 
-            {result.response && (
+            {result.response ? (
               <div className="mt-8">
                 <div className="flex items-center mb-4">
                   <div className="w-8 h-8 bg-gradient-to-r from-indigo-700 to-blue-800 rounded-lg flex items-center justify-center mr-3">
@@ -841,7 +841,7 @@ export default function WebhookForm() {
                   </pre>
                 </div>
               </div>
-            )}
+            ) : null}
           </div>
         </div>
       )}

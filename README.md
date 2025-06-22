@@ -1,67 +1,104 @@
 # ELTEX Webhook Form
 
-A professional webhook form application built with Next.js for collecting contact information and routing data based on phone number validation.
+A Next.js form application for testing Make.com and n8n phone number automation workflows. This form generates the exact JSON payload structure required by the ELTEX automation exercise and sends it to your configured webhook endpoints.
 
 ## Features
 
-- **Modern UI/UX**: Clean, responsive design with ELTEX branding
-- **Phone Number Validation**: Automatically detects Spanish vs foreign phone numbers
-- **Smart Routing**: Routes Spanish numbers to automation workflows
-- **Test Case Integration**: Pre-configured test scenarios for validation
-- **Form Validation**: Comprehensive client-side validation with Zod
-- **Webhook Integration**: Seamless integration with automation platforms
+- ✅ **Pre-configured Test Cases**: Load the 3 test cases from the automation exercise with one click
+- ✅ **Phone Number Detection Preview**: Shows which numbers will be detected as Spanish vs Foreign
+- ✅ **Multiple Webhook Support**: Send to Make.com, n8n, or custom webhook endpoints
+- ✅ **Form Validation**: Comprehensive validation with helpful error messages
+- ✅ **Response Display**: Shows the webhook response for debugging
+- ✅ **Mobile Responsive**: Works on all device sizes
 
-## Technology Stack
+## Quick Start
 
-- **Framework**: Next.js 15.3.4
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS 4
-- **Form Handling**: React Hook Form with Zod validation
-- **Icons**: Lucide React
-- **Deployment**: Vercel
-
-## Project Structure
-
-```
-webhook-form/
-├── src/
-│   ├── app/
-│   │   ├── globals.css
-│   │   ├── layout.tsx
-│   │   └── page.tsx
-│   └── components/
-│       └── WebhookForm.tsx
-├── public/
-│   ├── eltex-logo.svg
-│   ├── eltex-logo-small.svg
-│   └── favicon.ico
-├── package.json
-└── vercel.json
-```
-
-## Phone Number Validation Logic
-
-The application validates phone numbers to determine if they are Spanish:
-
-- **Spanish Numbers**: `+34`, `0034`, `34`, `6xx`, `7xx`
-- **Foreign Numbers**: All other international formats
-
-## Environment Variables
-
-- `NEXT_PUBLIC_N8N_WEBHOOK_URL`: n8n webhook endpoint for automation
-
-## Development
-
+### 1. Clone and Install
 ```bash
+git clone <your-repo>
 cd webhook-form
 npm install
+```
+
+### 2. Configure Webhook URLs
+Copy the environment variables file:
+```bash
+cp .env.example .env.local
+```
+
+Edit `.env.local` with your actual webhook URLs:
+```env
+NEXT_PUBLIC_MAKE_WEBHOOK_URL=https://hook.eu2.make.com/your-actual-webhook-id
+NEXT_PUBLIC_N8N_WEBHOOK_URL=https://primary-production-1cd8.up.railway.app/webhook/webhook-phone-automation
+```
+
+### 3. Run Locally
+```bash
 npm run dev
 ```
 
-## Deployment
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-This application is configured for deployment on Vercel with automatic builds from the GitHub repository.
+## Test Cases
 
-## License
+The form includes 3 pre-configured test cases that match the automation exercise:
 
-© 2024 ELTEX. All rights reserved.
+1. **Spanish Number (+34651558844)** - Should trigger HTTP request to Make.com endpoint
+2. **Foreign Number (005411556699)** - Should trigger email alert to l.lemos@eltex.es
+3. **Spanish Local (tel: 604112266)** - Should trigger HTTP request to Make.com endpoint
+
+Click "Load Test Case" on any test case to populate the form with that data.
+
+## Phone Number Detection Logic
+
+The automation workflows use this regex pattern to detect Spanish numbers:
+```regex
+^(\+34|tel:\s*[67]|[67])
+```
+
+**Spanish Numbers (HTTP Request):**
+- `+34` prefix (international format)
+- `tel: 6` or `tel: 7` (local format with tel: prefix)
+- Numbers starting with `6` or `7` (local Spanish mobile)
+
+**Foreign Numbers (Email Alert):**
+- Any number that doesn't match the Spanish pattern
+- Sends email to `l.lemos@eltex.es`
+
+## Deployment to Vercel
+
+### Option 1: Deploy via Vercel CLI
+```bash
+npm install -g vercel
+vercel
+```
+
+### Option 2: Deploy via GitHub
+1. Push your code to GitHub
+2. Connect your GitHub repo to Vercel
+3. Set environment variables in Vercel dashboard:
+   - `NEXT_PUBLIC_MAKE_WEBHOOK_URL`
+   - `NEXT_PUBLIC_N8N_WEBHOOK_URL`
+
+## Setting Up Automation Workflows
+
+### Make.com Setup
+1. Import the `make-com-phone-automation-blueprint.json` file
+2. Configure the webhook URL in your scenario
+3. Copy the webhook URL to your environment variables
+4. Activate the scenario
+
+### n8n Setup
+1. Import the `n8n-phone-number-automation.json` file
+2. Configure SMTP credentials for email sending
+3. Activate the workflow
+4. Copy the webhook URL to your environment variables
+
+## Tech Stack
+
+- **Next.js 15** - React framework
+- **TypeScript** - Type safety
+- **Tailwind CSS** - Styling
+- **React Hook Form** - Form handling
+- **Zod** - Form validation
+- **Lucide React** - Icons
