@@ -141,14 +141,51 @@ export default function WebhookForm() {
       });
 
       if (response.ok) {
-        const responseData = await response.json();
+        // Handle both JSON and non-JSON responses
+        let responseData: unknown;
+        const contentType = response.headers.get('content-type');
+
+        try {
+          if (contentType && contentType.includes('application/json')) {
+            responseData = await response.json();
+          } else {
+            // Handle plain text responses (like Make.com's "Accepted")
+            const textResponse = await response.text();
+            responseData = {
+              message: textResponse,
+              status: response.status,
+              statusText: response.statusText,
+              contentType: contentType || 'text/plain'
+            };
+          }
+        } catch (parseError) {
+          // Fallback if JSON parsing fails
+          const textResponse = await response.text();
+          responseData = {
+            message: textResponse || 'Response received successfully',
+            status: response.status,
+            statusText: response.statusText,
+            parseError: parseError instanceof Error ? parseError.message : 'Unknown parse error'
+          };
+        }
+
         setResult({
           success: true,
           message: `Successfully sent to ${data.webhook_endpoint.toUpperCase()} webhook!`,
           response: responseData,
         });
       } else {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        // Handle HTTP error responses
+        let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        try {
+          const errorText = await response.text();
+          if (errorText) {
+            errorMessage += ` - ${errorText}`;
+          }
+        } catch {
+          // If we can't read the error response, use the basic message
+        }
+        throw new Error(errorMessage);
       }
     } catch (error) {
       setResult({
