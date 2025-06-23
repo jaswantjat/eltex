@@ -66,6 +66,7 @@ export default function WebhookForm() {
 
   const selectedEndpoint = watch('webhook_endpoint');
   const [selectedTestCase, setSelectedTestCase] = useState<number | null>(null);
+  const [connectionTest, setConnectionTest] = useState<{endpoint: string, status: 'testing' | 'success' | 'error', message: string} | null>(null);
 
   const generatePayload = (data: FormData) => {
     const now = new Date();
@@ -124,6 +125,42 @@ export default function WebhookForm() {
     return urls[endpoint as keyof typeof urls];
   };
 
+  const testConnection = async (endpoint: string) => {
+    setConnectionTest({ endpoint, status: 'testing', message: 'Testing SSL connection...' });
+
+    try {
+      const webhookUrl = getWebhookUrl(endpoint);
+
+      // Simple HEAD request to test SSL connectivity
+      const response = await fetch(webhookUrl, {
+        method: 'HEAD',
+        headers: {
+          'User-Agent': 'ELTEX-Webhook-Form/1.0 (Connection-Test)',
+        },
+      });
+
+      setConnectionTest({
+        endpoint,
+        status: 'success',
+        message: `✅ SSL connection successful (${response.status} ${response.statusText})`
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const isSSLError = errorMessage.includes('SSL') ||
+                        errorMessage.includes('TLS') ||
+                        errorMessage.includes('certificate') ||
+                        errorMessage.includes('handshake');
+
+      setConnectionTest({
+        endpoint,
+        status: 'error',
+        message: isSSLError
+          ? `❌ SSL/TLS Error: ${errorMessage}`
+          : `❌ Connection Error: ${errorMessage}`
+      });
+    }
+  };
+
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true);
     setResult(null);
@@ -132,7 +169,42 @@ export default function WebhookForm() {
       const payload = generatePayload(data);
       const webhookUrl = getWebhookUrl(data.webhook_endpoint, data.custom_webhook_url);
 
-      const response = await fetch(webhookUrl, {
+      // Enhanced fetch with SSL error handling and retry logic
+      const fetchWithRetry = async (url: string, options: RequestInit, retries = 2): Promise<Response> => {
+        for (let i = 0; i <= retries; i++) {
+          try {
+            const response = await fetch(url, {
+              ...options,
+              // Add additional headers that might help with SSL compatibility
+              headers: {
+                ...options.headers,
+                'User-Agent': 'ELTEX-Webhook-Form/1.0',
+                'Accept': 'application/json, text/plain, */*',
+                'Cache-Control': 'no-cache',
+              },
+            });
+            return response;
+          } catch (error) {
+            // Check if this is an SSL/TLS related error
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            const isSSLError = errorMessage.includes('SSL') ||
+                              errorMessage.includes('TLS') ||
+                              errorMessage.includes('certificate') ||
+                              errorMessage.includes('handshake') ||
+                              errorMessage.includes('ERR_SSL_VERSION_OR_CIPHER_MISMATCH');
+
+            if (isSSLError && i < retries) {
+              // Wait before retry (exponential backoff)
+              await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
+              continue;
+            }
+            throw error;
+          }
+        }
+        throw new Error('Max retries exceeded');
+      };
+
+      const response = await fetchWithRetry(webhookUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -188,9 +260,44 @@ export default function WebhookForm() {
         throw new Error(errorMessage);
       }
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+
+      // Provide specific guidance for SSL/TLS errors
+      let userFriendlyMessage = `Failed to send webhook: ${errorMessage}`;
+      let troubleshootingTips = '';
+
+      if (errorMessage.includes('SSL') ||
+          errorMessage.includes('TLS') ||
+          errorMessage.includes('certificate') ||
+          errorMessage.includes('handshake') ||
+          errorMessage.includes('ERR_SSL_VERSION_OR_CIPHER_MISMATCH')) {
+
+        userFriendlyMessage = `SSL/TLS Connection Error: Unable to establish secure connection with ${data.webhook_endpoint.toUpperCase()} webhook endpoint.`;
+
+        if (data.webhook_endpoint === 'make') {
+          troubleshootingTips = `
+🔧 Troubleshooting Steps for Make.com SSL Error:
+• Try using a different browser (Chrome, Firefox, Safari)
+• Check if Make.com is experiencing service issues
+• Verify your webhook URL is correct and active
+• Try testing from a different network connection
+• Contact Make.com support if the issue persists
+
+💡 Alternative: Try switching to the n8n endpoint temporarily.`;
+        } else {
+          troubleshootingTips = `
+🔧 SSL Troubleshooting Steps:
+• Verify the webhook URL is correct and uses HTTPS
+• Check if the server supports modern TLS versions
+• Try from a different browser or network
+• Contact the webhook provider for SSL configuration issues`;
+        }
+      }
+
       setResult({
         success: false,
-        message: `Failed to send webhook: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        message: userFriendlyMessage,
+        response: troubleshootingTips ? { troubleshooting: troubleshootingTips, originalError: errorMessage } : undefined,
       });
     } finally {
       setIsSubmitting(false);
@@ -767,6 +874,50 @@ export default function WebhookForm() {
                         </svg>
                         {errors.custom_webhook_url.message}
                       </p>
+                    )}
+                  </div>
+                )}
+
+                {/* SSL Connection Test */}
+                {(selectedEndpoint === 'make' || selectedEndpoint === 'n8n') && (
+                  <div className="mt-6 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-200">
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <h4 className="text-lg font-bold text-indigo-800">SSL Connection Test</h4>
+                        <p className="text-sm text-indigo-600">Test SSL connectivity to the selected endpoint</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => testConnection(selectedEndpoint)}
+                        disabled={connectionTest?.status === 'testing'}
+                        className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-2"
+                      >
+                        {connectionTest?.status === 'testing' ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Testing...
+                          </>
+                        ) : (
+                          <>
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                            </svg>
+                            Test Connection
+                          </>
+                        )}
+                      </button>
+                    </div>
+
+                    {connectionTest && connectionTest.endpoint === selectedEndpoint && (
+                      <div className={`p-4 rounded-xl border ${
+                        connectionTest.status === 'success'
+                          ? 'bg-green-50 border-green-200 text-green-800'
+                          : connectionTest.status === 'error'
+                          ? 'bg-red-50 border-red-200 text-red-800'
+                          : 'bg-blue-50 border-blue-200 text-blue-800'
+                      }`}>
+                        <p className="text-sm font-mono">{connectionTest.message}</p>
+                      </div>
                     )}
                   </div>
                 )}
